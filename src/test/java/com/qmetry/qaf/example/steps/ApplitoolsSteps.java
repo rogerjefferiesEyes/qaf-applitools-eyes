@@ -29,10 +29,6 @@ public class ApplitoolsSteps {
 	
 	@Then("^I use Applitools Eyes to verify the Page \"([^\"]*)\" is visually perfect$")
 	public void i_use_eyes_to_verify_the_page_displays(String page) throws Throwable {
-		boolean isEyesEnabled = Boolean.parseBoolean(ConfigurationManager.getBundle().getPropertyValueOrNull("applitools.eyes.enabled"));
-		if(!isEyesEnabled) {
-			return;
-		}
 		Eyes eyes = (Eyes) TestBaseProvider.instance().get().getContext().getProperty("eyes");
 		if(eyes != null) {
 			eyes.check(Target.window().withName(page));
@@ -41,10 +37,6 @@ public class ApplitoolsSteps {
 	
 	@Then("^I use Applitools Eyes to verify the entire Page \"([^\"]*)\" is visually perfect$")
 	public void i_use_eyes_to_verify_entire_the_page_displays(String page) throws Throwable {
-		boolean isEyesEnabled = Boolean.parseBoolean(ConfigurationManager.getBundle().getPropertyValueOrNull("applitools.eyes.enabled"));
-		if(!isEyesEnabled) {
-			return;
-		}
 		Eyes eyes = (Eyes) TestBaseProvider.instance().get().getContext().getProperty("eyes");
 		if(eyes != null) {
 			eyes.check(Target.window().fully().withName(page));
@@ -53,10 +45,6 @@ public class ApplitoolsSteps {
 	
 	@Then("^I use Applitools Eyes to verify the region of Page \"([^\"]*)\" with CSS selector: \"([^\"]*)\" is visually perfect$")
 	public void i_use_eyes_to_verify_the_region_of_page_displays(String page, String cssSelector) throws Throwable {
-		boolean isEyesEnabled = Boolean.parseBoolean(ConfigurationManager.getBundle().getPropertyValueOrNull("applitools.eyes.enabled"));
-		if(!isEyesEnabled) {
-			return;
-		}
 		Eyes eyes = (Eyes) TestBaseProvider.instance().get().getContext().getProperty("eyes");
 		if(eyes != null) {
 			eyes.check(Target.region(By.cssSelector(cssSelector)).withName(page));
@@ -65,10 +53,8 @@ public class ApplitoolsSteps {
 	
 	@QAFTestStep(description = "check {0} with Applitools Eyes")
 	public static void checkWithApplitoolsEyes(String checkpointTag) {
-		boolean isEyesEnabled = Boolean.parseBoolean(ConfigurationManager.getBundle().getPropertyValueOrNull("applitools.eyes.enabled"));
-		
-		if(isEyesEnabled) {
-			Eyes eyes = (Eyes) TestBaseProvider.instance().get().getContext().getProperty("eyes");
+		Eyes eyes = (Eyes) TestBaseProvider.instance().get().getContext().getProperty("eyes");
+		if(eyes != null) {
 			eyes.check(Target.window().fully().withName(checkpointTag));
 		}
 	}

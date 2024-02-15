@@ -1,15 +1,15 @@
 package com.applitools.listeners;
 
 import java.util.Arrays;
-import java.util.Map;
+import java.util.Collection;
 import java.util.List;
-import java.util.ArrayList;
+import java.util.Map;
 
-import org.openqa.selenium.By;
 import org.testng.ISuite;
 import org.testng.ISuiteListener;
 import org.testng.ITestContext;
 import org.testng.ITestListener;
+import org.testng.ITestNGMethod;
 import org.testng.ITestResult;
 
 import com.applitools.eyes.BatchInfo;
@@ -35,9 +35,6 @@ import com.qmetry.qaf.automation.step.StepExecutionTracker;
 import com.qmetry.qaf.automation.step.client.TestNGScenario;
 import com.qmetry.qaf.automation.ui.webdriver.QAFExtendedWebDriver;
 
-import io.cucumber.java.en.Then;
-import io.cucumber.java.en.When;
-
 @QAFTestStepProvider
 public class ApplitoolsListener implements QAFTestStepListener, ISuiteListener, ITestListener {
 	public EyesRunner runner;
@@ -47,6 +44,8 @@ public class ApplitoolsListener implements QAFTestStepListener, ISuiteListener, 
 	private static BatchInfo batchInfo;
 
 	String testThreadId = "";
+	
+	boolean isEyesEnabled;
 	
 	private String getScenarioOutlineExampleParameters(ITestResult test) {
 		String parameterDetails = "";
@@ -144,17 +143,11 @@ public class ApplitoolsListener implements QAFTestStepListener, ISuiteListener, 
 	}
 
 	public void beforeScenario(ITestResult test) {
-		boolean isEyesEnabled = Boolean
-				.parseBoolean(ConfigurationManager.getBundle().getPropertyValueOrNull("applitools.eyes.enabled"));
-		if (!isEyesEnabled) {
-			return;
-		}
-
 		TestNGScenario scenario = (TestNGScenario) test.getMethod();
 		Map<String, Object> metadata = scenario.getMetaData();
 		String featureFileName = (String) metadata.get("reference");
 		if(featureFileName == null) {
-			featureFileName = "<No Feature File>";
+			featureFileName = "";
 		}
 
 		String parameterDetails = getScenarioOutlineExampleParameters(test);
@@ -190,55 +183,50 @@ public class ApplitoolsListener implements QAFTestStepListener, ISuiteListener, 
 
 	@Override
 	public void afterExecute(StepExecutionTracker stepExecutionTracker) {
-		boolean isEyesEnabled = Boolean
-				.parseBoolean(ConfigurationManager.getBundle().getPropertyValueOrNull("applitools.eyes.enabled"));
-		if (!isEyesEnabled) {
-			return;
-		}
-		String stepDesc = stepExecutionTracker.getStep().getDescription().replaceAll("\"", "");
-		System.out.println("Applitools Eyes - afterExecute - Step: " + stepDesc);
-		boolean isAutoCheckAfterStep = Boolean.parseBoolean(
-				ConfigurationManager.getBundle().getPropertyValueOrNull("applitools.eyes.auto_check_after_step"));
-
-		if (isAutoCheckAfterStep) {
-			Eyes eyes = (Eyes) TestBaseProvider.instance().get().getContext().getProperty("eyes");
-			if (eyes != null && eyes.getIsOpen()) {
+		Eyes eyes = (Eyes) TestBaseProvider.instance().get().getContext().getProperty("eyes");
+		if (eyes != null && eyes.getIsOpen()) {
+//			boolean isAutoCheckAfterStep = Boolean.parseBoolean(
+//					ConfigurationManager.getBundle().getPropertyValueOrNull("applitools.eyes.auto_check_after_step"));
+			String[] cucumberTags = stepExecutionTracker.getScenario().getGroups();
+			System.out.println("Applitools Eyes - afterExecute - Groups: " + Arrays.toString(cucumberTags));
+			boolean isAutoCheckAfterStep = Arrays.asList(cucumberTags).contains("applitoolsAutoCheckAfterStep");
+			
+			
+			
+			if (isAutoCheckAfterStep) {
+				String stepDesc = stepExecutionTracker.getStep().getDescription().replaceAll("\"", "");
+				System.out.println("Applitools Eyes - afterExecute - Step: " + stepDesc);
 				eyes.check(Target.window().fully().withName(stepDesc));
-			} else {
-				System.out
-						.println("Applitools Eyes - afterExecute - Eyes is not initialized! (Step: " + stepDesc + ")");
 			}
 		}
-
 	}
 
 	@Override
 	public void onStart(ISuite suite) {
-		boolean isEyesEnabled = Boolean
-				.parseBoolean(ConfigurationManager.getBundle().getPropertyValueOrNull("applitools.eyes.enabled"));
+//		isEyesEnabled = Boolean
+//				.parseBoolean(ConfigurationManager.getBundle().getPropertyValueOrNull("applitools.eyes.enabled"));
+		
+		isEyesEnabled = suite.getMethodsByGroups().containsKey("applitools");
+		
 		if (!isEyesEnabled) {
-			System.err.println("Applitools Eyes - onStart - Eyes not enabled!");
+			System.out.println("Applitools Eyes - onStart - Eyes not enabled!");
 			return;
 		}
-		// TODO Auto-generated method stub
+		
 		if (batchInfo == null)
 			batchInfo = new BatchInfo(suite.getName());
 	}
 
 	@Override
 	public void onFinish(ISuite suite) {
-		boolean isEyesEnabled = Boolean
-				.parseBoolean(ConfigurationManager.getBundle().getPropertyValueOrNull("applitools.eyes.enabled"));
-		if (!isEyesEnabled)
-			return;
-		TestResultsSummary results = runner.getAllTestResults(false);
-		System.out.println("Applitools Eyes - onFinish - Eyes Test Results:\n" + results.toString());
+		if(runner != null) {
+			TestResultsSummary results = runner.getAllTestResults(false);
+			System.out.println("Applitools Eyes - onFinish - Eyes Test Results:\n" + results.toString());
+		}
 	}
 
 	@Override
 	public void onTestStart(ITestResult result) {
-		boolean isEyesEnabled = Boolean
-				.parseBoolean(ConfigurationManager.getBundle().getPropertyValueOrNull("applitools.eyes.enabled"));
 		if (!isEyesEnabled)
 			return;
 		beforeScenario(result);
@@ -246,10 +234,6 @@ public class ApplitoolsListener implements QAFTestStepListener, ISuiteListener, 
 
 	@Override
 	public void onTestSuccess(ITestResult result) {
-		boolean isEyesEnabled = Boolean
-				.parseBoolean(ConfigurationManager.getBundle().getPropertyValueOrNull("applitools.eyes.enabled"));
-		if (!isEyesEnabled)
-			return;
 		String threadId = result.getMethod().getId();
 		Eyes eyes = (Eyes) TestBaseProvider.instance().get().getContext().getProperty("eyes");
 		if (eyes != null && eyes.getIsOpen()) {
@@ -270,10 +254,6 @@ public class ApplitoolsListener implements QAFTestStepListener, ISuiteListener, 
 
 	@Override
 	public void onTestFailure(ITestResult result) {
-		boolean isEyesEnabled = Boolean
-				.parseBoolean(ConfigurationManager.getBundle().getPropertyValueOrNull("applitools.eyes.enabled"));
-		if (!isEyesEnabled)
-			return;
 		Eyes eyes = (Eyes) TestBaseProvider.instance().get().getContext().getProperty("eyes");
 		if (eyes != null && eyes.getIsOpen()) {
 			eyes.abort();
@@ -285,10 +265,6 @@ public class ApplitoolsListener implements QAFTestStepListener, ISuiteListener, 
 
 	@Override
 	public void onTestSkipped(ITestResult result) {
-		boolean isEyesEnabled = Boolean
-				.parseBoolean(ConfigurationManager.getBundle().getPropertyValueOrNull("applitools.eyes.enabled"));
-		if (!isEyesEnabled)
-			return;
 		Eyes eyes = (Eyes) TestBaseProvider.instance().get().getContext().getProperty("eyes");
 		if (eyes != null && eyes.getIsOpen()) {
 			eyes.abort();

@@ -18,21 +18,26 @@
 	regarding copyright ownership and licenses of other open source software 
 	/ files used by QMetry Automation Framework. For any inquiry or need additional 
 	information, please contact support-qaf@infostretch.com -->
-	
-<suite name="QAF Demo" verbose="1" thread-count="3" parallel="tests">
+
+<suite name="QAF Demo" verbose="1" thread-count="3"
+	parallel="tests">
 	<listeners>
 		<listener
-			class-name="com.applitools.listeners.ApplitoolsListener" />
+			class-name="com.applitools.listeners.ApplitoolsListener">
+
+		</listener>
 	</listeners>
-	<test name="BDD Test" enabled="true">
+	<test name="BDD Test" enabled="false">
 		<classes>
 			<class
 				name="com.qmetry.qaf.automation.step.client.text.BDDTestFactory"></class>
 		</classes>
 	</test>
 	<test name="QAF-Cucumber-BDD-Test" enabled="true">
-		<parameter name="step.provider.pkg" value="com.qmetry.qaf.example.steps" />
-		<parameter name="scenario.file.loc" value="resources/features" />
+		<parameter name="step.provider.pkg"
+			value="com.qmetry.qaf.example.steps" />
+		<parameter name="scenario.file.loc"
+			value="resources/features" />
 		<classes>
 			<class
 				name="com.qmetry.qaf.automation.step.client.text.BDDTestFactory2" />
@@ -44,7 +49,7 @@
 				name="com.qmetry.qaf.automation.step.client.csv.KwdTestFactory"></class>
 		</classes>
 	</test>
-	<test name="java Test2" enabled="true">
+	<test name="java Test2" enabled="false">
 		<classes>
 			<class name="com.qmetry.qaf.example.test.SampleTest"></class>
 		</classes>
